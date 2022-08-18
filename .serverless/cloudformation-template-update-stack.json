@@ -1,0 +1,1109 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ServerlessDeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ServerlessDeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "ServerlessDeploymentBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "SaveNoteboardLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/ris-notes-dev-saveNoteboard"
+      }
+    },
+    "RemoveNoteLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/ris-notes-dev-removeNote"
+      }
+    },
+    "GetNoteboardLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/ris-notes-dev-getNoteboard"
+      }
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "ris-notes",
+                  "dev",
+                  "lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ris-notes-dev*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/ris-notes-dev*:*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:*",
+                    "s3:*"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              "ris-notes",
+              "dev",
+              {
+                "Ref": "AWS::Region"
+              },
+              "lambdaRole"
+            ]
+          ]
+        }
+      }
+    },
+    "SaveNoteboardLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/ris-notes/dev/1598259983729-2020-08-24T09:06:23.729Z/ris-notes.zip"
+        },
+        "FunctionName": "ris-notes-dev-saveNoteboard",
+        "Handler": "dist/noteboard.saveNoteboard",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs12.x",
+        "Timeout": 20,
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": "production"
+          }
+        }
+      },
+      "DependsOn": [
+        "SaveNoteboardLogGroup"
+      ]
+    },
+    "RemoveNoteLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/ris-notes/dev/1598259983729-2020-08-24T09:06:23.729Z/ris-notes.zip"
+        },
+        "FunctionName": "ris-notes-dev-removeNote",
+        "Handler": "dist/noteboard.removeNote",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs12.x",
+        "Timeout": 20,
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": "production"
+          }
+        }
+      },
+      "DependsOn": [
+        "RemoveNoteLogGroup"
+      ]
+    },
+    "GetNoteboardLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/ris-notes/dev/1598259983729-2020-08-24T09:06:23.729Z/ris-notes.zip"
+        },
+        "FunctionName": "ris-notes-dev-getNoteboard",
+        "Handler": "dist/noteboard.getNoteboard",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs12.x",
+        "Timeout": 20,
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": "production"
+          }
+        }
+      },
+      "DependsOn": [
+        "GetNoteboardLogGroup"
+      ]
+    },
+    "ApiGatewayRestApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": "dev-ris-notes",
+        "EndpointConfiguration": {
+          "Types": [
+            "EDGE"
+          ]
+        },
+        "Policy": ""
+      }
+    },
+    "ApiGatewayResourceV1": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "ApiGatewayRestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "v1",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayResourceV1Noteboard": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "ApiGatewayResourceV1"
+        },
+        "PathPart": "noteboard",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayResourceV1RemoveDashnote": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "ApiGatewayResourceV1"
+        },
+        "PathPart": "remove-note",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayMethodV1NoteboardOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": {
+            "application/json": "{statusCode:200}"
+          },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,POST'"
+              },
+              "ResponseTemplates": {
+                "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+              }
+            }
+          ]
+        },
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceV1Noteboard"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayMethodV1RemoveDashnoteOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": {
+            "application/json": "{statusCode:200}"
+          },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
+              },
+              "ResponseTemplates": {
+                "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+              }
+            }
+          ]
+        },
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceV1RemoveDashnote"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayMethodV1NoteboardPost": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "POST",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceV1Noteboard"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "SaveNoteboardLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          },
+          "PassthroughBehavior": "NEVER",
+          "RequestTemplates": {
+            "application/json": "\n    #set( $body = $input.json(\"$\") )\n\n    \n  #define( $loop )\n    {\n    #foreach($key in $map.keySet())\n        #set( $k = $util.escapeJavaScript($key) )\n        #set( $v = $util.escapeJavaScript($map.get($key)).replaceAll(\"\\\\'\", \"'\") )\n        \"$k\":\n          \"$v\"\n          #if( $foreach.hasNext ) , #end\n    #end\n    }\n  #end\n\n  {\n    \"body\": $body,\n    \"method\": \"$context.httpMethod\",\n    \"principalId\": \"$context.authorizer.principalId\",\n    \"stage\": \"$context.stage\",\n\n    \"cognitoPoolClaims\" : {\n       \n       \"sub\": \"$context.authorizer.claims.sub\"\n    },\n\n    #set( $map = $context.authorizer )\n    \"enhancedAuthContext\": $loop,\n\n    #set( $map = $input.params().header )\n    \"headers\": $loop,\n\n    #set( $map = $input.params().querystring )\n    \"query\": $loop,\n\n    #set( $map = $input.params().path )\n    \"path\": $loop,\n\n    #set( $map = $context.identity )\n    \"identity\": $loop,\n\n    #set( $map = $stageVariables )\n    \"stageVariables\": $loop,\n\n    \"requestPath\": \"$context.resourcePath\"\n  }\n\n  ",
+            "application/x-www-form-urlencoded": "\n    #define( $body )\n      {\n      #foreach( $token in $input.path('$').split('&') )\n        #set( $keyVal = $token.split('=') )\n        #set( $keyValSize = $keyVal.size() )\n        #if( $keyValSize >= 1 )\n          #set( $key = $util.escapeJavaScript($util.urlDecode($keyVal[0])) )\n          #if( $keyValSize >= 2 )\n            #set($val = $util.escapeJavaScript($util.urlDecode($keyVal[1])).replaceAll(\"\\\\'\",\"'\"))\n          #else\n            #set( $val = '' )\n          #end\n          \"$key\": \"$val\"#if($foreach.hasNext),#end\n        #end\n      #end\n      }\n    #end\n\n    \n  #define( $loop )\n    {\n    #foreach($key in $map.keySet())\n        #set( $k = $util.escapeJavaScript($key) )\n        #set( $v = $util.escapeJavaScript($map.get($key)).replaceAll(\"\\\\'\", \"'\") )\n        \"$k\":\n          \"$v\"\n          #if( $foreach.hasNext ) , #end\n    #end\n    }\n  #end\n\n  {\n    \"body\": $body,\n    \"method\": \"$context.httpMethod\",\n    \"principalId\": \"$context.authorizer.principalId\",\n    \"stage\": \"$context.stage\",\n\n    \"cognitoPoolClaims\" : {\n       \n       \"sub\": \"$context.authorizer.claims.sub\"\n    },\n\n    #set( $map = $context.authorizer )\n    \"enhancedAuthContext\": $loop,\n\n    #set( $map = $input.params().header )\n    \"headers\": $loop,\n\n    #set( $map = $input.params().querystring )\n    \"query\": $loop,\n\n    #set( $map = $input.params().path )\n    \"path\": $loop,\n\n    #set( $map = $context.identity )\n    \"identity\": $loop,\n\n    #set( $map = $stageVariables )\n    \"stageVariables\": $loop,\n\n    \"requestPath\": \"$context.resourcePath\"\n  }\n\n  "
+          },
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "SelectionPattern": "",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "400",
+              "SelectionPattern": "[\\s\\S]*\\[400\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "401",
+              "SelectionPattern": "[\\s\\S]*\\[401\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "403",
+              "SelectionPattern": "[\\s\\S]*\\[403\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "404",
+              "SelectionPattern": "[\\s\\S]*\\[404\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "422",
+              "SelectionPattern": "[\\s\\S]*\\[422\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "500",
+              "SelectionPattern": "[\\s\\S]*(Process\\s?exited\\s?before\\s?completing\\s?request|\\[500\\])[\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "502",
+              "SelectionPattern": "[\\s\\S]*\\[502\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "504",
+              "SelectionPattern": "([\\s\\S]*\\[504\\][\\s\\S]*)|(.*Task timed out after \\d+\\.\\d+ seconds$)",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            }
+          ]
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "200"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "400"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "401"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "403"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "404"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "422"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "500"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "502"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "504"
+          }
+        ]
+      }
+    },
+    "ApiGatewayMethodV1RemoveDashnotePost": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "POST",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceV1RemoveDashnote"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "RemoveNoteLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          },
+          "PassthroughBehavior": "NEVER",
+          "RequestTemplates": {
+            "application/json": "\n    #set( $body = $input.json(\"$\") )\n\n    \n  #define( $loop )\n    {\n    #foreach($key in $map.keySet())\n        #set( $k = $util.escapeJavaScript($key) )\n        #set( $v = $util.escapeJavaScript($map.get($key)).replaceAll(\"\\\\'\", \"'\") )\n        \"$k\":\n          \"$v\"\n          #if( $foreach.hasNext ) , #end\n    #end\n    }\n  #end\n\n  {\n    \"body\": $body,\n    \"method\": \"$context.httpMethod\",\n    \"principalId\": \"$context.authorizer.principalId\",\n    \"stage\": \"$context.stage\",\n\n    \"cognitoPoolClaims\" : {\n       \n       \"sub\": \"$context.authorizer.claims.sub\"\n    },\n\n    #set( $map = $context.authorizer )\n    \"enhancedAuthContext\": $loop,\n\n    #set( $map = $input.params().header )\n    \"headers\": $loop,\n\n    #set( $map = $input.params().querystring )\n    \"query\": $loop,\n\n    #set( $map = $input.params().path )\n    \"path\": $loop,\n\n    #set( $map = $context.identity )\n    \"identity\": $loop,\n\n    #set( $map = $stageVariables )\n    \"stageVariables\": $loop,\n\n    \"requestPath\": \"$context.resourcePath\"\n  }\n\n  ",
+            "application/x-www-form-urlencoded": "\n    #define( $body )\n      {\n      #foreach( $token in $input.path('$').split('&') )\n        #set( $keyVal = $token.split('=') )\n        #set( $keyValSize = $keyVal.size() )\n        #if( $keyValSize >= 1 )\n          #set( $key = $util.escapeJavaScript($util.urlDecode($keyVal[0])) )\n          #if( $keyValSize >= 2 )\n            #set($val = $util.escapeJavaScript($util.urlDecode($keyVal[1])).replaceAll(\"\\\\'\",\"'\"))\n          #else\n            #set( $val = '' )\n          #end\n          \"$key\": \"$val\"#if($foreach.hasNext),#end\n        #end\n      #end\n      }\n    #end\n\n    \n  #define( $loop )\n    {\n    #foreach($key in $map.keySet())\n        #set( $k = $util.escapeJavaScript($key) )\n        #set( $v = $util.escapeJavaScript($map.get($key)).replaceAll(\"\\\\'\", \"'\") )\n        \"$k\":\n          \"$v\"\n          #if( $foreach.hasNext ) , #end\n    #end\n    }\n  #end\n\n  {\n    \"body\": $body,\n    \"method\": \"$context.httpMethod\",\n    \"principalId\": \"$context.authorizer.principalId\",\n    \"stage\": \"$context.stage\",\n\n    \"cognitoPoolClaims\" : {\n       \n       \"sub\": \"$context.authorizer.claims.sub\"\n    },\n\n    #set( $map = $context.authorizer )\n    \"enhancedAuthContext\": $loop,\n\n    #set( $map = $input.params().header )\n    \"headers\": $loop,\n\n    #set( $map = $input.params().querystring )\n    \"query\": $loop,\n\n    #set( $map = $input.params().path )\n    \"path\": $loop,\n\n    #set( $map = $context.identity )\n    \"identity\": $loop,\n\n    #set( $map = $stageVariables )\n    \"stageVariables\": $loop,\n\n    \"requestPath\": \"$context.resourcePath\"\n  }\n\n  "
+          },
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "SelectionPattern": "",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "400",
+              "SelectionPattern": "[\\s\\S]*\\[400\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "401",
+              "SelectionPattern": "[\\s\\S]*\\[401\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "403",
+              "SelectionPattern": "[\\s\\S]*\\[403\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "404",
+              "SelectionPattern": "[\\s\\S]*\\[404\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "422",
+              "SelectionPattern": "[\\s\\S]*\\[422\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "500",
+              "SelectionPattern": "[\\s\\S]*(Process\\s?exited\\s?before\\s?completing\\s?request|\\[500\\])[\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "502",
+              "SelectionPattern": "[\\s\\S]*\\[502\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "504",
+              "SelectionPattern": "([\\s\\S]*\\[504\\][\\s\\S]*)|(.*Task timed out after \\d+\\.\\d+ seconds$)",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            }
+          ]
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "200"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "400"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "401"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "403"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "404"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "422"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "500"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "502"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "504"
+          }
+        ]
+      }
+    },
+    "ApiGatewayMethodV1NoteboardGet": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "GET",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceV1Noteboard"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "GetNoteboardLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          },
+          "PassthroughBehavior": "NEVER",
+          "RequestTemplates": {
+            "application/json": "\n    #set( $body = $input.json(\"$\") )\n\n    \n  #define( $loop )\n    {\n    #foreach($key in $map.keySet())\n        #set( $k = $util.escapeJavaScript($key) )\n        #set( $v = $util.escapeJavaScript($map.get($key)).replaceAll(\"\\\\'\", \"'\") )\n        \"$k\":\n          \"$v\"\n          #if( $foreach.hasNext ) , #end\n    #end\n    }\n  #end\n\n  {\n    \"body\": $body,\n    \"method\": \"$context.httpMethod\",\n    \"principalId\": \"$context.authorizer.principalId\",\n    \"stage\": \"$context.stage\",\n\n    \"cognitoPoolClaims\" : {\n       \n       \"sub\": \"$context.authorizer.claims.sub\"\n    },\n\n    #set( $map = $context.authorizer )\n    \"enhancedAuthContext\": $loop,\n\n    #set( $map = $input.params().header )\n    \"headers\": $loop,\n\n    #set( $map = $input.params().querystring )\n    \"query\": $loop,\n\n    #set( $map = $input.params().path )\n    \"path\": $loop,\n\n    #set( $map = $context.identity )\n    \"identity\": $loop,\n\n    #set( $map = $stageVariables )\n    \"stageVariables\": $loop,\n\n    \"requestPath\": \"$context.resourcePath\"\n  }\n\n  ",
+            "application/x-www-form-urlencoded": "\n    #define( $body )\n      {\n      #foreach( $token in $input.path('$').split('&') )\n        #set( $keyVal = $token.split('=') )\n        #set( $keyValSize = $keyVal.size() )\n        #if( $keyValSize >= 1 )\n          #set( $key = $util.escapeJavaScript($util.urlDecode($keyVal[0])) )\n          #if( $keyValSize >= 2 )\n            #set($val = $util.escapeJavaScript($util.urlDecode($keyVal[1])).replaceAll(\"\\\\'\",\"'\"))\n          #else\n            #set( $val = '' )\n          #end\n          \"$key\": \"$val\"#if($foreach.hasNext),#end\n        #end\n      #end\n      }\n    #end\n\n    \n  #define( $loop )\n    {\n    #foreach($key in $map.keySet())\n        #set( $k = $util.escapeJavaScript($key) )\n        #set( $v = $util.escapeJavaScript($map.get($key)).replaceAll(\"\\\\'\", \"'\") )\n        \"$k\":\n          \"$v\"\n          #if( $foreach.hasNext ) , #end\n    #end\n    }\n  #end\n\n  {\n    \"body\": $body,\n    \"method\": \"$context.httpMethod\",\n    \"principalId\": \"$context.authorizer.principalId\",\n    \"stage\": \"$context.stage\",\n\n    \"cognitoPoolClaims\" : {\n       \n       \"sub\": \"$context.authorizer.claims.sub\"\n    },\n\n    #set( $map = $context.authorizer )\n    \"enhancedAuthContext\": $loop,\n\n    #set( $map = $input.params().header )\n    \"headers\": $loop,\n\n    #set( $map = $input.params().querystring )\n    \"query\": $loop,\n\n    #set( $map = $input.params().path )\n    \"path\": $loop,\n\n    #set( $map = $context.identity )\n    \"identity\": $loop,\n\n    #set( $map = $stageVariables )\n    \"stageVariables\": $loop,\n\n    \"requestPath\": \"$context.resourcePath\"\n  }\n\n  "
+          },
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "SelectionPattern": "",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "400",
+              "SelectionPattern": "[\\s\\S]*\\[400\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "401",
+              "SelectionPattern": "[\\s\\S]*\\[401\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "403",
+              "SelectionPattern": "[\\s\\S]*\\[403\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "404",
+              "SelectionPattern": "[\\s\\S]*\\[404\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "422",
+              "SelectionPattern": "[\\s\\S]*\\[422\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "500",
+              "SelectionPattern": "[\\s\\S]*(Process\\s?exited\\s?before\\s?completing\\s?request|\\[500\\])[\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "502",
+              "SelectionPattern": "[\\s\\S]*\\[502\\][\\s\\S]*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": "504",
+              "SelectionPattern": "([\\s\\S]*\\[504\\][\\s\\S]*)|(.*Task timed out after \\d+\\.\\d+ seconds$)",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            }
+          ]
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "200"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "400"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "401"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "403"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "404"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "422"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "500"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "502"
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": "504"
+          }
+        ]
+      }
+    },
+    "ApiGatewayDeployment1598259965427": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "StageName": "dev"
+      },
+      "DependsOn": [
+        "ApiGatewayMethodV1NoteboardOptions",
+        "ApiGatewayMethodV1RemoveDashnoteOptions",
+        "ApiGatewayMethodV1NoteboardPost",
+        "ApiGatewayMethodV1RemoveDashnotePost",
+        "ApiGatewayMethodV1NoteboardGet"
+      ]
+    },
+    "SaveNoteboardLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "SaveNoteboardLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "RemoveNoteLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "RemoveNoteLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "GetNoteboardLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "GetNoteboardLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": {
+        "Ref": "ServerlessDeploymentBucket"
+      }
+    },
+    "ServiceEndpoint": {
+      "Description": "URL of the service endpoint",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "ApiGatewayRestApi"
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix"
+            },
+            "/dev"
+          ]
+        ]
+      }
+    }
+  }
+}

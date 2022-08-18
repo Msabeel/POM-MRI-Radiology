@@ -1,0 +1,321 @@
+@import-normalize;
+
+@import "tailwind-base.css";
+
+body.no-animate *,
+body.no-animate *::before,
+body.no-animate *::after {
+    transition: none !important;
+    animation: none !important;
+}
+
+html {
+    font-size: 62.5%;
+    font-family: Muli, Roboto, Helvetica Neue, Arial, sans-serif;
+    background-color: #121212;
+}
+
+body {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+html,
+body,
+#root {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    margin: 0;
+}
+
+h1,
+.h1 {
+    font-size: 24px;
+}
+
+h2,
+.h2 {
+    font-size: 20px;
+}
+
+h3,
+.h3 {
+    font-size: 16px;
+}
+
+h4,
+.h4 {
+    font-size: 15px;
+}
+
+h5,
+.h5 {
+    font-size: 13px;
+}
+
+h6,
+.h6 {
+    font-size: 12px;
+}
+
+.ps > .ps__rail-y,
+.ps > .ps__rail-x {
+    z-index: 99;
+}
+a[role="button"] {
+    text-decoration: none;
+}
+
+[role="tooltip"] {
+    z-index: 9999;
+}
+.drag-drop-zone {
+    display: flex;
+    justify-content: flex-start;
+    width: 90%;
+    height: 300px;
+    padding: 2rem;
+    background: #f2f2f2;
+    border-radius: 0.5rem;
+}
+
+#client-snackbar,
+#notistack-snackbar {
+    padding: 10px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    font-size: 18px !important;
+    border-radius: 25px !important;
+}
+
+[class^="MuiSnackbar-root-"],
+[class^="SnackbarItem-root-"] {
+    top: 200px;
+}
+.drag-drop-zone.inside-drag-area {
+    opacity: 0.7;
+}
+
+.fill-star {
+    color: #ffb300;
+}
+.mt-2 {
+    margin-top: 2rem;
+}
+.h-300 {
+    min-height: 300px;
+}
+.patient-card {
+    display: inline-flex;
+    padding: 15px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    margin-right: 20px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    position: relative;
+}
+.patient-box > div {
+    justify-content: flex-start;
+    align-items: flex-start;
+    align-content: flex-start;
+    display: flex;
+}
+.floating-cancel-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    border-radius: 50px;
+    padding: 3px;
+    width: 35px;
+    height: 35px;
+    overflow: hidden;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+}
+.cancel-btn {
+    border-radius: 50px;
+    padding: 0px;
+    height: 35px;
+    width: 35px;
+}
+.ctm-height {
+    min-height: auto;
+    height: auto !important;
+}
+.patient-name {
+    margin-left: 5px;
+}
+.w-450 {
+    width: 45rem;
+}
+.plist-0 {
+    padding: 0px !important;
+}
+.filter-box {
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+/*search filter*/
+.rs-top-filter .MuiInput-underline-642:hover:not(.Mui-disabled):before,
+.rs-top-filter .MuiInput-underline-642:before,
+.rs-top-filter .MuiInput-underline-642:after {
+    border-bottom: none;
+}
+
+.clear-filter {
+    height: 100%;
+    padding: 0px 10px;
+}
+
+.filter-item-container {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+}
+
+.filter-item {
+    background-color: #f1faff;
+    display: flex;
+    margin-right: 15px;
+    width: max-content;
+    margin-bottom: 10px;
+    border-radius: 2px;
+}
+.filter-button {
+    display: flex;
+    margin-right: 15px;
+    width: max-content;
+    margin-bottom: 10px;
+    border-radius: 2px;
+}
+
+.filter-operator {
+    background: transparent;
+    padding: 5px 10px;
+    color: #000;
+    border-right: solid 1px #ccc;
+}
+
+.filter-content {
+    text-transform: none;
+    background-color: #f1faff;
+    color: #000;
+    padding: 0px 5px;
+}
+.py-0 {
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+.search-box > div > div:before {
+    border-bottom: none;
+}
+.search-box > div > div:hover:not(.Mui-disabled):before {
+    border-bottom: none;
+}
+.search-box > div > div {
+    margin-top: -8px;
+}
+.filter-content b {
+    font-weight: 700;
+}
+.hidden-true {
+    display: none;
+}
+.openreport .ag-root.ag-layout-normal {
+    height: 100%;
+    min-height: 300px;
+   
+}
+.tasktable .ag-root-wrapper-body.ag-layout-normal {
+
+    height: 100%;
+
+}
+.alerttable .ag-root-wrapper-body.ag-layout-normal {
+
+    height: 100%;
+
+}
+@media only screen and (min-width: 1921px) {
+    .ag-grid-custom .ag-center-cols-container {
+        width: unset !important;
+    }
+}
+/*end search filter*/
+/* Medium Devices, Desktops Only */
+@media only screen and (min-width: 992px) {
+    ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+        background-color: rgba(0, 0, 0, 0);
+    }
+
+    ::-webkit-scrollbar:hover {
+        width: 12px;
+        height: 12px;
+        background-color: rgba(0, 0, 0, 0.06);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        border: 2px solid transparent;
+        box-shadow: inset 0 0 0 20px rgba(0, 0, 0, 0.24);
+        border-radius: 20px;
+    }
+
+    ::-webkit-scrollbar-thumb:active {
+        box-shadow: inset 0 0 0 20px rgba(0, 0, 0, 0.37);
+        border-radius: 20px;
+    }
+}
+
+#tabScrolling {
+    scrollbar-width: 2px;
+}
+#tabScrolling::-webkit-scrollbar {
+    /* WebKit */
+    width: 2px;
+}
+
+form label {
+    z-index: 99;
+}
+
+
+@keyframes autofill {
+    0%,
+    100% {
+        background: transparent;
+    }
+}
+input:-webkit-autofill {
+    animation-delay: 1s;
+    animation-name: autofill !important;
+    animation-fill-mode: both;
+    -webkit-box-shadow: 0 0 0 100px transparent inset !important;
+}
+
+@media print {
+    .no-print,
+    .no-print * {
+        display: none !important;
+    }
+}
+
+
+
+
+@import "print.css";
+
+@import "tables.css";
+
+@import "prism.css";
+
+@import "tailwind.css";
+
+@import "../app/fuse-layouts/shared-components/quickPanel/AlertSlide.css";

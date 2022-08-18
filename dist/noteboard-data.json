@@ -1,0 +1,11 @@
+{
+    "body": {
+        "noteTitle": "Test note",
+        "noteDescription": "Test description",
+        "reminderDate": "2020-08-17 10:10:30",
+        "labelDescription": "Work",
+        "imagePath": "http://react-material.fusetheme.com/assets/images/notes/beach.jpeg",
+        "checkList": [ "Item1", "Item2" ],
+        "userId": 101 
+    }
+}
